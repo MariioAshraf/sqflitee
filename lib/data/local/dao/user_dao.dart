@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflitee/data/local/db/data_base_tables.dart';
 
-import '../../../models/user.dart';
+import '../../../presentation/models/user.dart';
 
 class UserDao {
   final Database db;
@@ -12,12 +12,9 @@ class UserDao {
   Future<User> insertUser(User user) async {
     final id = await db.insert(DbTables.users, user.toMap());
 
-    return User(
-      id: id,
-      name: user.name,
-      email: user.email,
-    );
+    return User(id: id, name: user.name, email: user.email);
   }
+
   // 📥 Get all
   Future<List<User>> getUsers() async {
     final result = await db.query(DbTables.users);
@@ -36,10 +33,6 @@ class UserDao {
 
   // ❌ Delete
   Future<int> deleteUser(int id) async {
-    return await db.delete(
-      DbTables.users,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    return await db.delete(DbTables.users, where: 'id = ?', whereArgs: [id]);
   }
 }
