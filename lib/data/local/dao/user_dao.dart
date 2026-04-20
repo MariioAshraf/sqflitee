@@ -9,10 +9,15 @@ class UserDao {
   UserDao(this.db);
 
   // ➕ Add
-  Future<int> insertUser(User user) async {
-    return await db.insert(DbTables.users, user.toMap());
-  }
+  Future<User> insertUser(User user) async {
+    final id = await db.insert(DbTables.users, user.toMap());
 
+    return User(
+      id: id,
+      name: user.name,
+      email: user.email,
+    );
+  }
   // 📥 Get all
   Future<List<User>> getUsers() async {
     final result = await db.query(DbTables.users);
