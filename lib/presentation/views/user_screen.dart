@@ -48,7 +48,6 @@ class UserScreen extends StatelessWidget {
 
             /// List
             Expanded(
-
               child: BlocBuilder<UserCubit, UserState>(
                 builder: (context, state) {
                   if (state is UserLoading) {
@@ -57,12 +56,29 @@ class UserScreen extends StatelessWidget {
 
                   if (state is UserLoaded) {
                     final users = state.users;
-
                     return ListView.builder(
                       itemCount: users.length,
                       itemBuilder: (context, index) {
                         final user = users[index];
-
+                        print(user.toString());
+                        // if (user.nationalId == null ||
+                        //     user.nationalId!.isEmpty) {
+                        //   Future.microtask(() {
+                        //     showDialog(
+                        //       context: context,
+                        //       builder: (_) => AlertDialog(
+                        //         title: Text("Missing National ID"),
+                        //         content: Text("Please add your National ID"),
+                        //         actions: [
+                        //           TextButton(
+                        //             onPressed: () => Navigator.pop(context),
+                        //             child: Text("OK"),
+                        //           ),
+                        //         ],
+                        //       ),
+                        //     );
+                        //   });
+                        // }
                         return Card(
                           child: ListTile(
                             title: Text(user.name),
