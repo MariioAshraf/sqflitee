@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../presentation/models/user.dart';
+import '../models/user.dart';
 import '../cubit/user_cubit/user_cubit.dart';
 
 class UserScreen extends StatelessWidget {
@@ -115,7 +115,7 @@ class UserScreen extends StatelessWidget {
     );
   }
 
-  void _showUpdateDialog(BuildContext context, User user) {
+  void _showUpdateDialog(BuildContext context, OldUserModel user) {
     final nameController = TextEditingController(text: user.name);
     final emailController = TextEditingController(text: user.email);
 
@@ -135,7 +135,7 @@ class UserScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () {
                 context.read<UserCubit>().updateUser(
-                  User(
+                  OldUserModel(
                     id: user.id,
                     name: nameController.text.isEmpty
                         ? user.name

@@ -1,4 +1,4 @@
-import '../../presentation/models/user.dart';
+import '../../features/home/presentation/models/user.dart';
 import '../local/dao/user_dao.dart';
 
 class UserRepository {
@@ -6,13 +6,13 @@ class UserRepository {
 
   UserRepository(this.dao);
 
-  Future<List<User>> getUsers() => dao.getUsers();
+  Future<List<OldUserModel>> getUsers() => dao.getUsers();
 
-  Future<User> addUser(User user) async {
+  Future<OldUserModel> addUser(OldUserModel user) async {
     return await dao.insertUser(user);
   }
 
   Future<void> deleteUser(int id) => dao.deleteUser(id);
 
-  Future<void> updateUser(User user) => dao.updateUser(user);
+  Future<void> updateUser(OldUserModel user) => dao.updateUser(user);
 }

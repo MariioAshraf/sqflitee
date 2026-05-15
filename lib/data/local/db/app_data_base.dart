@@ -17,7 +17,7 @@ class AppDatabase {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 1,
       onCreate: (db, version) async {
         await db.execute(UserTable.create);
 

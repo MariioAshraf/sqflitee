@@ -1,15 +1,13 @@
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
-
-import '../../../data/repos/user_repo.dart';
+import '../../../../../data/repos/user_repo.dart';
 import '../../models/user.dart';
-
 part 'user_state.dart';
 
 class UserCubit extends Cubit<UserState> {
   final UserRepository repo;
 
-  List<User> users = [];
+  List<OldUserModel> users = [];
 
   UserCubit(this.repo) : super(UserInitial());
 
@@ -20,7 +18,7 @@ class UserCubit extends Cubit<UserState> {
   }
 
   Future<void> addUser(String name, String email) async {
-    final newUser = await repo.addUser(User(name: name, email: email));
+    final newUser = await repo.addUser(OldUserModel(name: name, email: email));
 
     users.add(newUser); // 👈 بدون reload
     emit(UserLoaded(List.from(users)));
@@ -33,7 +31,7 @@ class UserCubit extends Cubit<UserState> {
     emit(UserLoaded(List.from(users)));
   }
 
-  Future<void> updateUser(User updatedUser) async {
+  Future<void> updateUser(OldUserModel updatedUser) async {
     await repo.updateUser(updatedUser);
 
     final index = users.indexWhere((e) => e.id == updatedUser.id);

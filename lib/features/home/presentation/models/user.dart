@@ -1,11 +1,11 @@
-class User {
+class OldUserModel {
   final int? id;
   final String name;
   final String email;
   final String? nationalId;
   final String? age;
 
-  User({
+  OldUserModel({
     this.id,
     required this.name,
     required this.email,
@@ -26,8 +26,8 @@ class User {
   String toString() {
     return 'User(id: $id, name: $name, email: $email, nationalId: $nationalId, age: $age)';
   }
-  factory User.fromMap(Map<String, dynamic> map) {
-    return User(
+  factory OldUserModel.fromMap(Map<String, dynamic> map) {
+    return OldUserModel(
       id: map['id'],
       name: map['name'],
       email: map['email'],
