@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:sqflitee/features/auth/data/models/signup_request_model.dart';
+import 'package:sqflitee/features/auth/domain/use_cases/signup_params.dart';
 import '../../../../../core/network/api_constants.dart';
 import '../../../../../core/network/api_service.dart';
 import '../../../../../core/network/network_exceptions.dart';
 import '../../../domain/entities/user_entity.dart';
+import '../../../domain/use_cases/signup_params.dart';
 import '../../models/user_model.dart';
 import 'auth_remote_data_source.dart';
 
@@ -63,6 +66,29 @@ final class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       );
 
       return UserModel.fromApi(response.data!);
+    } on DioException catch (e) {
+      throw NetworkException.fromError(e);
+    } catch (e) {
+      throw NetworkException.fromError(e);
+    }
+  }
+
+  @override
+  Future<void> signUp({required SignUpParams params}) async {
+    try {
+      final Map<String, dynamic> responseAsUser = {
+        'name': 'mario',
+        'email': 'mario@gmail.com',
+        'phone': '01277075054',
+        'nationalId': '301090126',
+        'password': '111',
+      };
+      // final request = SignUpRequestModel.fromParams(params);
+      // final response = await _apiService.post(
+      //   ApiConstants.signUpEndpoint,
+      //   data: request.toMap(),
+      // );
+      // return UserModel.fromApi(response.data!);
     } on DioException catch (e) {
       throw NetworkException.fromError(e);
     } catch (e) {

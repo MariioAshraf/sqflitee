@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
-import 'package:sqflitee/features/auth/data/data_source/local_data_sourcec/auth_local_data_source.dart';
-import 'package:sqflitee/features/auth/data/models/user_model.dart';
+import 'package:sqflitee/features/auth/data/data_source/local_data_source/auth_local_data_source.dart';
+import 'package:sqflitee/features/auth/domain/use_cases/signup_params.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_exceptions.dart';
 import '../../../../core/services/connectivity/connectivity_service.dart';
 import '../../../../core/services/token_service.dart';
 import '../../domain/entities/user_entity.dart';
+import '../../domain/repos/auth_repo.dart';
 import '../data_source/remote_data_source/auth_remote_data_source.dart';
-import 'auth_repo.dart';
 
 final class AuthRepoImpl implements AuthRepo {
   final AuthRemoteDataSource remoteDataSource;
@@ -31,7 +31,21 @@ final class AuthRepoImpl implements AuthRepo {
     final isConnected = await connectivityService.checkConnectivity();
 
     if (!isConnected) {
-      return _handleOfflineLogin(email: email, password: password);
+      print('notContecteddddddddddddddddddddddddddddddddddddddddddd');
+      // جرب offline أولاً
+      final offlineResult = await _handleOfflineLogin(
+        email: email,
+        password: password,
+      );
+
+      // لو مفيش cached user — جرب API على أي حال
+      // الداتا ممكن تكون ضعيفة بس شغالة
+      return offlineResult.fold(
+        (failure) => failure is NoInternetFailure
+            ? _handleOnlineLogin(email: email, password: password)
+            : Left(failure),
+        Right.new,
+      );
     }
 
     return _handleOnlineLogin(email: email, password: password);
@@ -45,7 +59,8 @@ final class AuthRepoImpl implements AuthRepo {
     final cachedUser = await localDataSource.getUserByEmail(email);
 
     if (cachedUser == null) {
-      return const Left(NoInternetFailure());
+      print('no chached user and no internet');
+      return const Left(OfflineUserNotFoundFailure());
     }
 
     if (!cachedUser.verifyPassword(password)) {
@@ -66,7 +81,6 @@ final class AuthRepoImpl implements AuthRepo {
       /// if user already exists wake sure of credentials, then update tokens.
       if (cachedUser != null) {
         if (!cachedUser.verifyPassword(password)) {
-
           return const Left(InvalidCredentialsFailure());
         }
         unawaited(_refreshAndCache(email: email, password: password));
@@ -152,5 +166,36 @@ final class AuthRepoImpl implements AuthRepo {
       NetworkExceptionType.badCertificate => const BadCertificateFailure(),
       NetworkExceptionType.unknown => UnknownFailure(message: e.message),
     };
+  }
+
+  // في AuthRepoImpl أضف:
+
+  @override
+  Future<Either<Failure, void>> signUp({required SignUpParams params}) async {
+    final isConnected = await connectivityService.checkConnectivity();
+
+    if (!isConnected) {
+      print('nooooooooooooooooooooooooooooooooooooooooo interetttttttttt');
+      return const Left(NoInternetFailure());
+    }
+
+    try {
+      await remoteDataSource.signUp(params: params);
+      //
+      // final userToCache = user.withHashedPassword(params.password);
+      //
+      // await Future.wait([
+      //   tokenService.saveAccessToken(user.accessToken),
+      //   tokenService.saveRefreshToken(user.refreshToken),
+      //   tokenService.saveUserRole(user.role.toJson()),
+      //   localDataSource.cacheUser(userToCache),
+      // ]);
+
+      return Right(null);
+    } on NetworkException catch (e) {
+      return Left(_mapNetworkExceptionToFailure(e));
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
   }
 }

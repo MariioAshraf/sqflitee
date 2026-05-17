@@ -8,6 +8,7 @@ import 'core/router/app_router.dart';
 import 'core/services/connectivity/cubit/connectivity_cubit.dart';
 import 'core/services/connectivity/cubit/connectivity_state.dart';
 import 'core/services/token_service.dart';
+import 'core/utils/connectivity_toast.dart';
 import 'data/local/dao/user_dao.dart';
 import 'data/local/db/app_data_base.dart';
 import 'features/auth/data/models/user_model.dart';
@@ -60,6 +61,8 @@ void main() async {
 //   debugPrint('TEST USER INSERTED');
 // }
 
+// في main.dart
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -67,33 +70,21 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<ConnectivityCubit>(
       create: (_) => getIt<ConnectivityCubit>(),
-      child: MaterialApp.router(
-        title: 'Church App',
-        debugShowCheckedModeBanner: false,
-        routerConfig: appRouter,
-        builder: (context, child) =>
-            BlocListener<ConnectivityCubit, ConnectivityState>(
-              listenWhen: (previous, current) {
-                if (previous.isInitial && current.isConnected) return false;
-                return !current.isInitial;
-              },
-              listener: (context, state) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      state.isConnected
-                          ? 'تم استعادة الاتصال'
-                          : 'لا يوجد اتصال بالإنترنت',
-                    ),
-                    backgroundColor: state.isConnected
-                        ? Colors.green
-                        : Colors.red,
-                    duration: const Duration(seconds: 3),
-                  ),
-                );
-              },
-              child: child ?? const SizedBox.shrink(),
-            ),
+      child: BlocListener<ConnectivityCubit, ConnectivityState>(
+        listenWhen: (previous, current) {
+          if (previous.isInitial && current.isConnected) return false;
+          return !current.isInitial;
+        },
+        listener: (_, state) {
+          // ✅ مش محتاج context خالص
+          ConnectivityToast.show(isConnected: state.isConnected);
+        },
+        child: MaterialApp.router(
+          title: 'Church App',
+          debugShowCheckedModeBanner: false,
+          routerConfig: appRouter,
+          // ✅ ربط الـ navigatorKey
+        ),
       ),
     );
   }

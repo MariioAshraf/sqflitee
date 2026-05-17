@@ -1,8 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:sqflitee/features/auth/presentation/manager/login_cubit/login_state.dart';
-
 import '../../../../../core/services/token_service.dart';
-import '../../../data/repositories/auth_repo.dart';
+import '../../../domain/repos/auth_repo.dart';
 
 final class LoginCubit extends Cubit<LoginState> {
   final AuthRepo _authRepo;

@@ -5,13 +5,15 @@ import 'package:get_it/get_it.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflitee/data/local/dao/user_dao.dart';
 import '../../data/local/db/app_data_base.dart';
-import '../../features/auth/data/data_source/local_data_sourcec/auth_local_data_source.dart';
-import '../../features/auth/data/data_source/local_data_sourcec/auth_local_data_source_impl.dart';
+import '../../features/auth/data/data_source/local_data_source/auth_local_data_source.dart';
+import '../../features/auth/data/data_source/local_data_source/auth_local_data_source_impl.dart';
 import '../../features/auth/data/data_source/remote_data_source/auth_remote_data_source.dart';
 import '../../features/auth/data/data_source/remote_data_source/auth_remote_data_source_impl.dart';
-import '../../features/auth/data/repositories/auth_repo.dart';
+
 import '../../features/auth/data/repositories/auth_repo_impl.dart';
+import '../../features/auth/domain/repos/auth_repo.dart';
 import '../../features/auth/presentation/manager/login_cubit/login_cubit.dart';
+import '../../features/auth/presentation/manager/signup_cubit/sign_up_cubit.dart';
 import '../../features/splash/presentation/cubit/splash_cubit.dart';
 import '../network/api_service.dart';
 import '../network/auth_interceptor.dart';
@@ -122,6 +124,9 @@ void _registerCubits() {
   // factory — مش singleton عشان BlocProvider بيتحكم في الـ lifecycle
   getIt.registerFactory<ConnectivityCubit>(
     () => ConnectivityCubit(getIt<ConnectivityService>()),
+  );
+  getIt.registerFactory<SignUpCubit>(
+    () => SignUpCubit(authRepo: getIt<AuthRepo>()),
   );
   getIt.registerFactory<SplashCubit>(() => SplashCubit(getIt<TokenService>()));
   getIt.registerFactory<LoginCubit>(

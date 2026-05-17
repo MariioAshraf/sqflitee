@@ -38,36 +38,34 @@ final class UserModel extends UserEntity {
   }
 
   // ── من الـ local DB (فيه passwordHash) ──────────────
-  factory UserModel.fromDb(Map<String, dynamic> map) {
-    return UserModel(
-      id:           map[UserTable.colId]           as String,
-      name:         map[UserTable.colName]         as String,
-      tenantId:     map[UserTable.colTenantId]     as String,
-      email:        map[UserTable.colEmail]        as String,
-      phone:        map[UserTable.colPhone]        as String,
-      nationalId:   map[UserTable.colNationalId]   as String,
-      role:         UserRoleX.fromJson(map[UserTable.colRole] as String?),
-      accessToken:  map[UserTable.colAccessToken]  as String,
+  factory UserModel.fromDb(Map<String, dynamic> map)
+    => UserModel(
+      id: map[UserTable.colId] as String,
+      name: map[UserTable.colName] as String,
+      tenantId: map[UserTable.colTenantId] as String,
+      email: map[UserTable.colEmail] as String,
+      phone: map[UserTable.colPhone] as String,
+      nationalId: map[UserTable.colNationalId] as String,
+      role: UserRoleX.fromJson(map[UserTable.colRole] as String?),
+      accessToken: map[UserTable.colAccessToken] as String,
       refreshToken: map[UserTable.colRefreshToken] as String,
       passwordHash: map[UserTable.colPasswordHash] as String?, // nullable
     );
-  }
+
 
   // ── للـ local DB ─────────────────────────────────────
-  Map<String, dynamic> toDb() {
-    return {
-      UserTable.colId:           id,
-      UserTable.colName:         name,
-      UserTable.colTenantId:     tenantId,
-      UserTable.colEmail:        email,
-      UserTable.colPhone:        phone,
-      UserTable.colNationalId:   nationalId,
-      UserTable.colRole:         role.toJson(),
-      UserTable.colAccessToken:  accessToken,
-      UserTable.colRefreshToken: refreshToken,
-      UserTable.colPasswordHash: passwordHash, // ← hash
-    };
-  }
+  Map<String, dynamic> toDb() => {
+    UserTable.colId: id,
+    UserTable.colName: name,
+    UserTable.colTenantId: tenantId,
+    UserTable.colEmail: email,
+    UserTable.colPhone: phone,
+    UserTable.colNationalId: nationalId,
+    UserTable.colRole: role.toJson(),
+    UserTable.colAccessToken: accessToken,
+    UserTable.colRefreshToken: refreshToken,
+    UserTable.colPasswordHash: passwordHash, // ← hash
+  };
 
   // ── بيبني UserModel من Entity + يضيف الـ hash ────────
   factory UserModel.fromEntity(UserEntity entity) {
