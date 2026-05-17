@@ -11,8 +11,21 @@ final class ServerFailure extends Failure {
     : super(message);
 }
 
+final class OfflineUserNotFoundFailure extends Failure {
+  const OfflineUserNotFoundFailure()
+    : super(
+        'You are offline and there is local user found!, please connect to internet and try again later.',
+      );
+}
+
+// test local access
 final class NoInternetFailure extends Failure {
   const NoInternetFailure() : super('No internet connection.');
+}
+
+// test local access
+final class InvalidCredentialsFailure extends Failure {
+  const InvalidCredentialsFailure() : super('Error, Login with invalid credentials.');
 }
 
 final class UnauthorizedFailure extends Failure {

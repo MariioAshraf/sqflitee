@@ -1,21 +1,11 @@
-// lib/core/network/dio_factory.dart
-
 import 'package:dio/dio.dart';
-import '../services/token_service.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'api_constants.dart';
-import 'auth_interceptor.dart';
-import '../../features/auth/data/data_source/remote_data_source/auth_remote_data_source.dart';
 
 final class DioFactory {
-  final TokenService tokenService;
-  final AuthRemoteDataSource authRemoteDataSource;
+  const DioFactory._();
 
-  const DioFactory({
-    required this.tokenService,
-    required this.authRemoteDataSource,
-  });
-
-  Dio createDio() {
+  static Dio create() {
     final dio = Dio(
       BaseOptions(
         baseUrl: ApiConstants.baseUrl,
@@ -26,13 +16,18 @@ final class DioFactory {
       ),
     );
 
-    dio.interceptors.add(
-      AuthInterceptor(
-        dio: dio,
-        tokenService: tokenService,
-        authRemoteDataSource: authRemoteDataSource,
-      ),
-    );
+    // Logger في debug فقط — مش في production
+    assert(() {
+      dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: true,
+        ),
+      );
+      return true;
+    }());
 
     return dio;
   }

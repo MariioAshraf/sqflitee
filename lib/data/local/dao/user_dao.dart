@@ -1,7 +1,7 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:sqflitee/data/local/db/data_base_tables.dart';
+import 'package:sqflitee/features/auth/data/models/user_model.dart';
 
-import '../../../features/home/presentation/models/user.dart';
 
 
 class UserDao {
@@ -10,30 +10,46 @@ class UserDao {
   UserDao(this.db);
 
   // ➕ Add
-  Future<OldUserModel> insertUser(OldUserModel user) async {
-    final id = await db.insert(DbTables.users, user.toMap());
-
-    return OldUserModel(id: id, name: user.name, email: user.email);
-  }
-
-  // 📥 Get all
-  Future<List<OldUserModel>> getUsers() async {
-    final result = await db.query(DbTables.users);
-    return result.map((e) => OldUserModel.fromMap(e)).toList();
-  }
-
-  // ✏️ Update
-  Future<int> updateUser(OldUserModel user) async {
-    return await db.update(
+  Future<void> insertUser(UserModel user) async {
+    await db.insert(
       DbTables.users,
-      user.toMap(),
-      where: 'id = ?',
-      whereArgs: [user.id],
+      user.toDb(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
     );
   }
+  Future<UserModel?> getUserByEmail(
+      String email,
+      ) async {
 
-  // ❌ Delete
-  Future<int> deleteUser(int id) async {
-    return await db.delete(DbTables.users, where: 'id = ?', whereArgs: [id]);
+    final result = await db.query(
+      DbTables.users,
+      where: 'email = ?',
+      whereArgs: [email],
+      limit: 1,
+    );
+
+    if (result.isEmpty) return null;
+
+    return UserModel.fromDb(result.first);
   }
+  // // 📥 Get all
+  // Future<List<UserModel>> getUsers() async {
+  //   final result = await db.query(DbTables.users);
+  //   return result.map((e) => UserModel.fromMap(e)).toList();
+  // }
+  //
+  // // ✏️ Update
+  // Future<int> updateUser(UserModel user) async {
+  //   return await db.update(
+  //     DbTables.users,
+  //     user.toMap(),
+  //     where: 'id = ?',
+  //     whereArgs: [user.id],
+  //   );
+  // }
+
+  // // ❌ Delete
+  // Future<int> deleteUser(int id) async {
+  //   return await db.delete(DbTables.users, where: 'id = ?', whereArgs: [id]);
+  // }
 }

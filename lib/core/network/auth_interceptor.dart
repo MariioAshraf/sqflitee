@@ -57,7 +57,7 @@ final class AuthInterceptor extends Interceptor {
 
     } catch (e) {
       // الـ refresh فشل — امسح الـ tokens وارفض بـ reject صريح
-      await tokenService.clear();
+      await tokenService.clearAll();
       return handler.reject(
         DioException(
           requestOptions: err.requestOptions,
