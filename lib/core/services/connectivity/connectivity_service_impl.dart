@@ -7,7 +7,7 @@ final class ConnectivityServiceImpl implements ConnectivityService {
   final Connectivity _connectivity;
 
   static const _pingUrls    = ['https://1.1.1.1', 'https://8.8.8.8'];
-  static const _pingTimeout = Duration(seconds: 10); // من 2 لـ 5
+  static const _pingTimeout = Duration(seconds: 5); // من 2 لـ 5
 
   const ConnectivityServiceImpl(this._connectivity);
 
@@ -36,7 +36,7 @@ final class ConnectivityServiceImpl implements ConnectivityService {
     try {
       return await Future.any([
         ..._pingUrls.map(_pingUrl),
-        Future.delayed(const Duration(seconds: 10), () => false),
+        Future.delayed(const Duration(seconds: 12), () => false),
       ]);
     } catch (_) {
       return false;
