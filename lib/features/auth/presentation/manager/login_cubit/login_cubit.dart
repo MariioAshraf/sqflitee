@@ -12,14 +12,22 @@ final class LoginCubit extends Cubit<LoginState> {
       _tokenService = tokenService,
       super(const LoginInitial());
 
-  Future<void> login({required String email, required String password}) async {
+  Future<void> login({
+    required String email,
+    required String password,
+    required String churchCode,
+  }) async {
     emit(const LoginLoading());
 
-    final result = await _authRepo.login(email: email, password: password);
+    final result = await _authRepo.login(
+      email: email,
+      password: password,
+      churchCode: churchCode,
+    );
 
     result.fold((failure) => emit(LoginFailure(failure)), (user) async {
       // نحفظ الـ role عشان الـ SplashCubit يقدر يقراه بعدين
-      await _tokenService.saveUserRole(user.role.name);
+      // await _tokenService.saveUserRole(user.role.name);
       emit(LoginSuccess(user));
     });
   }

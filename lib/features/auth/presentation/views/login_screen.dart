@@ -17,6 +17,7 @@ class _LoginScreenState extends State<LoginScreen>
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
+  final _churchCodeCtrl = TextEditingController();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
   bool _obscurePassword = true;
@@ -43,6 +44,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _animCtrl.dispose();
+    _churchCodeCtrl.dispose();
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
     _emailFocus.dispose();
@@ -54,6 +56,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) return;
     FocusScope.of(context).unfocus();
     context.read<LoginCubit>().login(
+      churchCode: _churchCodeCtrl.text.trim(),
       email: _emailCtrl.text.trim(),
       password: _passwordCtrl.text,
     );
@@ -66,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen>
       child: BlocListener<LoginCubit, LoginState>(
         listener: (context, state) {
           if (state is LoginSuccess) {
-            context.goToHomeByRole(state.user.role);
+            context.goToHomeByRole(state.user.userRole);
           }
           if (state is LoginFailure) {
             ScaffoldMessenger.of(context)
@@ -113,6 +116,8 @@ class _LoginScreenState extends State<LoginScreen>
                                   const SizedBox(height: 16),
                                   _buildPasswordField(),
                                   const SizedBox(height: 12),
+                                  buildChurchCodeField(),
+                                  const SizedBox(height: 12),
                                   _buildForgotPassword(),
                                   const SizedBox(height: 32),
                                   _buildLoginButton(),
@@ -136,7 +141,32 @@ class _LoginScreenState extends State<LoginScreen>
       ),
     );
   }
+  Widget buildChurchCodeField() {
+    return TextFormField(
+      controller: _churchCodeCtrl,
+      textDirection: TextDirection.rtl,
+      textInputAction: TextInputAction.done,
+      style: const TextStyle(
+        fontFamily: 'Cairo',
+        fontSize: 15,
+      ),
+      validator: (v) {
+        if (v == null || v.trim().isEmpty) {
+          return 'أدخل كود الكنيسة';
+        }
 
+        if (v.trim().length < 3) {
+          return 'كود الكنيسة غير صحيح';
+        }
+
+        return null;
+      },
+      decoration: _inputDecoration(
+        label: 'كود الكنيسة',
+        icon: Icons.church_outlined,
+      ),
+    );
+  }
   // ── Header ───────────────────────────────────────────────────────────────
   Widget _buildHeader() {
     return Container(

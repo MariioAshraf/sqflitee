@@ -1,73 +1,78 @@
 import 'package:equatable/equatable.dart';
+import '../../../home/data/models/tenant_model.dart';
 
-enum UserRole { user, priest, unknown }
+// ════════════════════════════════════════════════════════
+//  UserRole enum
+// ════════════════════════════════════════════════════════
+enum UserRole { priest, headOfService, servant, member }
 
 extension UserRoleX on UserRole {
-  String toJson() => switch (this) {
-    UserRole.priest  => 'priest',
-    UserRole.user    => 'user',
-    UserRole.unknown => 'unknown',
-  };
-
-  static UserRole fromJson(String? role) => switch (role) {
-    'priest' => UserRole.priest,
-    'user'   => UserRole.user,
-    _        => UserRole.unknown,
+  String get apiValue => switch (this) {
+    UserRole.priest        => 'PRIEST',
+    UserRole.headOfService => 'HEAD_OF_SERVICE',
+    UserRole.servant       => 'SERVANT',
+    UserRole.member        => 'MEMBER',
   };
 }
 
-class UserEntity extends Equatable {
-  final String  id;
-  final String  name;
-  final String  tenantId;
-  final String  email;
-  final String  phone;
-  final String  nationalId;
-  final UserRole role;
-  final String  accessToken;
-  final String  refreshToken;
+extension StringToUserRole on String {
+  UserRole get toUserRole => switch (this) {
+    'PRIEST'          => UserRole.priest,
+    'HEAD_OF_SERVICE' => UserRole.headOfService,
+    'SERVANT'         => UserRole.servant,
+    'MEMBER'          => UserRole.member,
+    _                 => UserRole.member,
+  };
+}
 
-  // password مكانهوش في الـ Entity خالص
-  // الـ Entity بيمثل الـ domain object — مش بيشيل credentials
+// ════════════════════════════════════════════════════════
+//  UserEntity
+// ════════════════════════════════════════════════════════
+class UserEntity extends Equatable {
+  final String id;
+  final String tenantId;
+  final String fullName;
+  final String email;
+  final String? passwordHash;
+  final String phone;
+  final String nationalId;
+  final DateTime birthDate;
+  final String? qrCode;
+  final String? photoPath;
+  final DateTime? baptismDate;
+  final String? confessionPriestId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? deletedAt;
+  final UserRole userRole;
+  final List<dynamic> roles;
+  final TenantModel tenantModel;
 
   const UserEntity({
     required this.id,
-    required this.name,
     required this.tenantId,
+    required this.fullName,
     required this.email,
     required this.phone,
     required this.nationalId,
-    required this.role,
-    required this.accessToken,
-    required this.refreshToken,
+    required this.birthDate,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.userRole,
+    required this.tenantModel,
+    required this.roles,
+    this.passwordHash,
+    this.qrCode,
+    this.photoPath,
+    this.baptismDate,
+    this.confessionPriestId,
+    this.deletedAt,
   });
 
-  bool get isPriest => role == UserRole.priest;
+  static UserRole roleFromString(String roleStr) => roleStr.toUserRole;
 
-  UserEntity copyWith({
-    String?   id,
-    String?   name,
-    String?   tenantId,
-    String?   email,
-    String?   phone,
-    String?   nationalId,
-    UserRole? role,
-    String?   accessToken,
-    String?   refreshToken,
-  }) {
-    return UserEntity(
-      id:           id           ?? this.id,
-      name:         name         ?? this.name,
-      tenantId:     tenantId     ?? this.tenantId,
-      email:        email        ?? this.email,
-      phone:        phone        ?? this.phone,
-      nationalId:   nationalId   ?? this.nationalId,
-      role:         role         ?? this.role,
-      accessToken:  accessToken  ?? this.accessToken,
-      refreshToken: refreshToken ?? this.refreshToken,
-    );
-  }
+  bool get isPriest => userRole == UserRole.priest;
 
   @override
-  List<Object?> get props => [id, email, role];
+  List<Object?> get props => [id, email, userRole];
 }

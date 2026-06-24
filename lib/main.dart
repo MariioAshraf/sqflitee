@@ -9,59 +9,18 @@ import 'core/services/connectivity/cubit/connectivity_cubit.dart';
 import 'core/services/connectivity/cubit/connectivity_state.dart';
 import 'core/services/token_service.dart';
 import 'core/utils/connectivity_toast.dart';
-import 'data/local/dao/user_dao.dart';
+import 'data/local/daos/user_dao.dart';
 import 'data/local/db/app_data_base.dart';
 import 'features/auth/data/models/user_model.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await init();
-
-  // await seedAuthSession();
-  // await seedTestUser();
   Bloc.observer = AppBlocObserver();
   runApp(const MyApp());
 }
 
-// Future<void> seedAuthSession() async {
-//   final tokenService = getIt<TokenService>();
-//
-//   await tokenService.saveAccessToken('fake_access_token');
-//
-//   await tokenService.saveRefreshToken('fake_refresh_token');
-//
-//   await tokenService.saveUserRole('user');
-//
-//   print('AUTH SESSION SEEDED');
-// }
-//
-// Future<void> seedTestUser() async {
-//   final db = await AppDatabase.database;
-//
-//   final userDao = UserDao(db);
-//
-//   final existingUser = await userDao.getUserByEmail('mario@gmail.com');
-//
-//   if (existingUser != null) return;
-//
-//   await userDao.insertUser(
-//     UserModel(
-//       id: '123',
-//       name: 'Mario',
-//       tenantId: '55555',
-//       email: 'mario@gmail.com',
-//       phone: '01277075054',
-//       nationalId: '30303010',
-//       role: UserRole.user,
-//       accessToken: 'local_access_token',
-//       refreshToken: 'local_refresh_token',
-//     ),
-//   );
-//
-//   debugPrint('TEST USER INSERTED');
-// }
 
-// في main.dart
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -76,7 +35,6 @@ class MyApp extends StatelessWidget {
           return !current.isInitial;
         },
         listener: (_, state) {
-          // ✅ مش محتاج context خالص
           ConnectivityToast.show(isConnected: state.isConnected);
         },
         child: MaterialApp.router(

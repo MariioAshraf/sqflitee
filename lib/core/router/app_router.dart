@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:sqflitee/features/auth/presentation/views/sign_up_screen.dart';
+import 'package:sqflitee/features/home/presentation/cubits/manage_areas_cubit/areas_cubit.dart';
 import '../../features/auth/domain/entities/user_entity.dart';
 import '../../features/auth/presentation/manager/login_cubit/login_cubit.dart';
 import '../../features/auth/presentation/manager/signup_cubit/sign_up_cubit.dart';
@@ -80,7 +81,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: AppRoutes.priestHome,
-      builder: (_, __) => const PriestHomeScreen(),
+      builder: (_, __) =>  BlocProvider(
+  create: (context) => getIt<AreasCubit>(),
+  child: PriestHomeScreen(),
+),
     ),
   ],
 );
@@ -101,7 +105,8 @@ extension AppNavigation on BuildContext {
 
   void goToHomeByRole(UserRole role) => switch (role) {
     UserRole.priest => goToPriestHome(),
-    UserRole.user => goToUserHome(),
-    UserRole.unknown => goToLogin(),
+    UserRole.member => goToUserHome(),
+    UserRole.headOfService => goToUserHome(),
+    UserRole.servant => goToUserHome(),
   };
 }

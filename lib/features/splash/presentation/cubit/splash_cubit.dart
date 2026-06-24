@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/services/token_service.dart';
 import '../../../auth/domain/entities/user_entity.dart';
 import 'splash_state.dart';
@@ -10,7 +9,6 @@ final class SplashCubit extends Cubit<SplashState> {
   SplashCubit(this._tokenService) : super(const SplashInitial());
 
   Future<void> checkAuthStatus() async {
-    // الـ splash بيظهر minimum عشان مش يبقى flash سريع
     await Future.wait([
       _determineRoute(),
       Future.delayed(const Duration(seconds: 2)),
@@ -19,7 +17,7 @@ final class SplashCubit extends Cubit<SplashState> {
 
   Future<void> _determineRoute() async {
     try {
-      /// onboarding
+      // ── Onboarding ──────────────────────────────────
       final hasSeenOnboarding = await _tokenService.hasSeenOnboarding();
 
       if (!hasSeenOnboarding) {
@@ -27,23 +25,19 @@ final class SplashCubit extends Cubit<SplashState> {
         return;
       }
 
-      /// auth
+      // ── Auth ─────────────────────────────────────────
       final accessToken = await _tokenService.getAccessToken();
-
       final refreshToken = await _tokenService.getRefreshToken();
 
       if (accessToken == null || refreshToken == null) {
-        print(
-          'accessToken and refreshToken Not = null soooooooooooo navigating to home screen',
-        );
         emit(const SplashNavigateToLogin());
-
         return;
       }
 
-      /// role
+      // ── Role ─────────────────────────────────────────
+
       final roleStr = await _tokenService.getUserRole();
-      final role = UserRoleX.fromJson(roleStr);
+      final role = (roleStr ?? '').toUserRole;
 
       emit(SplashNavigateToHome(role));
     } catch (_) {

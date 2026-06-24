@@ -6,11 +6,10 @@ abstract interface class AuthRemoteDataSource {
   Future<UserModel> login({
     required String email,
     required String password,
+    required String churchCode,
   });
 
-  Future<UserModel> refreshToken({
-    required String refreshToken,
-  });
+  Future<void> refreshToken({required String refreshToken});
   Future<void> signUp({
     required SignUpParams params,
   });

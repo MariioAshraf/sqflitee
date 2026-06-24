@@ -7,10 +7,10 @@ class TokenServiceImpl implements TokenService {
   TokenServiceImpl(this._storage);
 
   // ── Keys ──────────────────────────────────────────────
-  static const _accessTokenKey    = 'access_token';
-  static const _refreshTokenKey   = 'refresh_token';
-  static const _userRoleKey       = 'user_role';
-  static const _onboardingKey     = 'has_seen_onboarding'; // ✅
+  static const _accessTokenKey = 'access_token';
+  static const _refreshTokenKey = 'refresh_token';
+  static const _userRoleKey = 'user_role';
+  static const _onboardingKey = 'has_seen_onboarding'; // ✅
 
   // ── Tokens ────────────────────────────────────────────
   @override
@@ -18,16 +18,14 @@ class TokenServiceImpl implements TokenService {
       _storage.write(key: _accessTokenKey, value: token);
 
   @override
-  Future<String?> getAccessToken() =>
-      _storage.read(key: _accessTokenKey);
+  Future<String?> getAccessToken() => _storage.read(key: _accessTokenKey);
 
   @override
   Future<void> saveRefreshToken(String token) =>
       _storage.write(key: _refreshTokenKey, value: token);
 
   @override
-  Future<String?> getRefreshToken() =>
-      _storage.read(key: _refreshTokenKey);
+  Future<String?> getRefreshToken() => _storage.read(key: _refreshTokenKey);
 
   // ── Role ──────────────────────────────────────────────
   @override
@@ -35,8 +33,7 @@ class TokenServiceImpl implements TokenService {
       _storage.write(key: _userRoleKey, value: role);
 
   @override
-  Future<String?> getUserRole() =>
-      _storage.read(key: _userRoleKey);
+  Future<String?> getUserRole() => _storage.read(key: _userRoleKey);
 
   // ── Onboarding ✅ ─────────────────────────────────────
   @override
@@ -51,5 +48,8 @@ class TokenServiceImpl implements TokenService {
 
   // ── Clear ─────────────────────────────────────────────
   @override
-  Future<void> clearAll() => _storage.deleteAll();
+  Future<void> clearAll() {
+    print('clearingggggggggggggggggggggggggggggggg');
+    return _storage.deleteAll();
+  }
 }

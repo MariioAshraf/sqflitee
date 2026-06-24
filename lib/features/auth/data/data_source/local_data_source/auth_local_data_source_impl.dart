@@ -1,4 +1,4 @@
-import '../../../../../data/local/dao/user_dao.dart';
+import '../../../../../data/local/daos/user_dao.dart';
 import '../../models/user_model.dart';
 import 'auth_local_data_source.dart';
 
@@ -9,7 +9,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
   @override
   Future<void> cacheUser(UserModel user) async {
-    await userDao.insertUser(user);
+    await userDao.cacheUser(user);
   }
 
   @override

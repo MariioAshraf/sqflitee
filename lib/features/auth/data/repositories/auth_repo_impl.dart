@@ -1,14 +1,16 @@
 import 'dart:async';
 import 'package:dartz/dartz.dart';
-import 'package:sqflitee/features/auth/data/data_source/local_data_source/auth_local_data_source.dart';
-import 'package:sqflitee/features/auth/domain/use_cases/signup_params.dart';
 import '../../../../core/errors/failures.dart';
 import '../../../../core/network/network_exceptions.dart';
-import '../../../../core/services/connectivity/connectivity_service.dart';
-import '../../../../core/services/token_service.dart';
+import '../../../../core/services/session_service.dart';
+import '../../../../core/di/dependency_injection.dart';
+import '../../data/data_source/local_data_source/auth_local_data_source.dart';
+import '../../data/data_source/remote_data_source/auth_remote_data_source.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../domain/repos/auth_repo.dart';
-import '../data_source/remote_data_source/auth_remote_data_source.dart';
+import '../../../../core/services/connectivity/connectivity_service.dart';
+import '../../../../core/services/token_service.dart';
+import '../../domain/use_cases/signup_params.dart';
 
 final class AuthRepoImpl implements AuthRepo {
   final AuthRemoteDataSource remoteDataSource;
@@ -27,175 +29,151 @@ final class AuthRepoImpl implements AuthRepo {
   Future<Either<Failure, UserEntity>> login({
     required String email,
     required String password,
+    required String churchCode,
   }) async {
     final isConnected = await connectivityService.checkConnectivity();
 
     if (!isConnected) {
-      print('notContecteddddddddddddddddddddddddddddddddddddddddddd');
-      // جرب offline أولاً
-      final offlineResult = await _handleOfflineLogin(
-        email: email,
-        password: password,
-      );
+      // ── Offline ──────────────────────────────────────
+      final cachedUser = await localDataSource.getUserByEmail(email);
 
-      // لو مفيش cached user — جرب API على أي حال
-      // الداتا ممكن تكون ضعيفة بس شغالة
-      return offlineResult.fold(
-        (failure) => failure is NoInternetFailure
-            ? _handleOnlineLogin(email: email, password: password)
-            : Left(failure),
-        Right.new,
-      );
+      if (cachedUser == null) return const Left(OfflineUserNotFoundFailure());
+
+      // bcrypt verify مش ممكن client-side
+      // لو الـ user موجود في الـ cache معناه دخل قبل كده
+      return Right(cachedUser);
     }
 
-    return _handleOnlineLogin(email: email, password: password);
-  }
-
-  // ── Offline ───────────────────────────────────────────
-  Future<Either<Failure, UserEntity>> _handleOfflineLogin({
-    required String email,
-    required String password,
-  }) async {
-    final cachedUser = await localDataSource.getUserByEmail(email);
-
-    if (cachedUser == null) {
-      print('no chached user and no internet');
-      return const Left(OfflineUserNotFoundFailure());
-    }
-
-    if (!cachedUser.verifyPassword(password)) {
-      return const Left(InvalidCredentialsFailure());
-    }
-
-    return Right(cachedUser);
+    return _handleOnlineLogin(
+      email: email,
+      password: password,
+      churchCode: churchCode,
+    );
   }
 
   // ── Online ────────────────────────────────────────────
   Future<Either<Failure, UserEntity>> _handleOnlineLogin({
     required String email,
     required String password,
+    required String churchCode,
   }) async {
     try {
       final cachedUser = await localDataSource.getUserByEmail(email);
 
-      /// if user already exists wake sure of credentials, then update tokens.
       if (cachedUser != null) {
-        if (!cachedUser.verifyPassword(password)) {
-          return const Left(InvalidCredentialsFailure());
-        }
-        unawaited(_refreshAndCache(email: email, password: password));
+        // اليوزر موجود — رجّع الـ cache فوراً وجدّد في الـ background
+        unawaited(
+          _refreshAndCache(
+            email: email,
+            password: password,
+            churchCode: churchCode,
+          ),
+        );
         return Right(cachedUser);
       }
 
-      /// here means that the user is logging for first time, so login and save data.
-      return _loginFromApi(email: email, password: password);
+      return _loginFromApi(
+        email: email,
+        password: password,
+        churchCode: churchCode,
+      );
     } on NetworkException catch (e) {
-      return Left(_mapNetworkExceptionToFailure(e));
+      return Left(_mapToFailure(e));
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
   }
 
-  // ── Background refresh ────────────────────────────────────────
+  // ── Background refresh ────────────────────────────────
+  // tokens → data source
+  // cache  → local data source
   Future<void> _refreshAndCache({
     required String email,
     required String password,
+    required String churchCode,
   }) async {
     try {
+      // remoteDataSource.login بيتكلم بالـ tokens تلقائياً
       final freshUser = await remoteDataSource.login(
+        churchCode: churchCode,
         email: email,
         password: password,
-      ); // freshUser → UserModel من الـ API (من غير passwordHash)
+      );
 
-      final userToCache = freshUser.withHashedPassword(password);
-
+      // ✅ الـ repo مسؤول بس عن الـ role + cache
       await Future.wait([
-        tokenService.saveAccessToken(freshUser.accessToken),
-        tokenService.saveRefreshToken(freshUser.refreshToken),
-        tokenService.saveUserRole(freshUser.role.toJson()),
-        localDataSource.cacheUser(userToCache),
+        tokenService.saveUserRole(freshUser.userRole.apiValue),
+        localDataSource.cacheUser(freshUser),
       ]);
     } catch (_) {
       // background فشل — مش مشكلة
     }
   }
 
-  // ── First login ───────────────────────────────────────────────
+  // ── First Login ───────────────────────────────────────
   Future<Either<Failure, UserEntity>> _loginFromApi({
     required String email,
     required String password,
+    required String churchCode,
   }) async {
     try {
+      // remoteDataSource.login بيتكلم بالـ tokens تلقائياً
       final user = await remoteDataSource.login(
+        churchCode: churchCode,
         email: email,
         password: password,
       );
-      final userToCache = user.withHashedPassword(password);
 
+      // ✅ الـ repo مسؤول بس عن الـ role + cache + session
       await Future.wait([
-        tokenService.saveAccessToken(user.accessToken),
-        tokenService.saveRefreshToken(user.refreshToken),
-        tokenService.saveUserRole(user.role.toJson()),
-        localDataSource.cacheUser(userToCache),
+        tokenService.saveUserRole(user.userRole.apiValue),
+        localDataSource.cacheUser(user),
       ]);
+
+      getIt<SessionService>().setUser(user);
 
       return Right(user);
     } on NetworkException catch (e) {
-      return Left(_mapNetworkExceptionToFailure(e));
+      return Left(_mapToFailure(e));
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
   }
 
-  Failure _mapNetworkExceptionToFailure(NetworkException e) {
-    return switch (e.type) {
-      NetworkExceptionType.noInternet => const NoInternetFailure(),
-      NetworkExceptionType.unauthorized => const UnauthorizedFailure(),
-      NetworkExceptionType.forbidden => const ForbiddenFailure(),
-      NetworkExceptionType.notFound => const NotFoundFailure(),
-      NetworkExceptionType.validationError => ValidationFailure(
-        message: e.message,
-      ),
-      NetworkExceptionType.rateLimited => const RateLimitedFailure(),
-      NetworkExceptionType.serverError => ServerFailure(
-        message: e.message,
-        statusCode: e.statusCode,
-      ),
-      NetworkExceptionType.timeout => const TimeoutFailure(),
-      NetworkExceptionType.cancelled => const CancelledFailure(),
-      NetworkExceptionType.badCertificate => const BadCertificateFailure(),
-      NetworkExceptionType.unknown => UnknownFailure(message: e.message),
-    };
-  }
-
-  // في AuthRepoImpl أضف:
-
+  // ── Sign Up ───────────────────────────────────────────
   @override
   Future<Either<Failure, void>> signUp({required SignUpParams params}) async {
     final isConnected = await connectivityService.checkConnectivity();
 
-    if (!isConnected) {
-      print('nooooooooooooooooooooooooooooooooooooooooo interetttttttttt');
-      return const Left(NoInternetFailure());
-    }
+    if (!isConnected) return const Left(NoInternetFailure());
 
     try {
       await remoteDataSource.signUp(params: params);
-      //
-      // final userToCache = user.withHashedPassword(params.password);
-      //
-      // await Future.wait([
-      //   tokenService.saveAccessToken(user.accessToken),
-      //   tokenService.saveRefreshToken(user.refreshToken),
-      //   tokenService.saveUserRole(user.role.toJson()),
-      //   localDataSource.cacheUser(userToCache),
-      // ]);
-
-      return Right(null);
+      return const Right(null);
     } on NetworkException catch (e) {
-      return Left(_mapNetworkExceptionToFailure(e));
+      return Left(_mapToFailure(e));
     } catch (e) {
       return Left(UnknownFailure(message: e.toString()));
     }
+  }
+
+  // ── Map ───────────────────────────────────────────────
+  Failure _mapToFailure(NetworkException e) {
+    return switch (e.type) {
+      NetworkExceptionType.noInternet      => const NoInternetFailure(),
+      NetworkExceptionType.unauthorized    => const UnauthorizedFailure(),
+      NetworkExceptionType.forbidden       => const ForbiddenFailure(),
+      NetworkExceptionType.notFound        => const NotFoundFailure(),
+      NetworkExceptionType.validationError => ValidationFailure(message: e.message),
+      NetworkExceptionType.rateLimited     => const RateLimitedFailure(),
+      NetworkExceptionType.serverError     => ServerFailure(
+        message: e.message,
+        statusCode: e.statusCode,
+      ),
+      NetworkExceptionType.timeout         => const TimeoutFailure(),
+      NetworkExceptionType.cancelled       => const CancelledFailure(),
+      NetworkExceptionType.badCertificate  => const BadCertificateFailure(),
+      NetworkExceptionType.unknown         => UnknownFailure(message: e.message),
+    };
   }
 }

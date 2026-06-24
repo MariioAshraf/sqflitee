@@ -7,6 +7,7 @@ abstract interface class AuthRepo {
   Future<Either<Failure, UserEntity>> login({
     required String email,
     required String password,
+    required String churchCode,
   });
   Future<Either<Failure, void>> signUp({
     required SignUpParams params,

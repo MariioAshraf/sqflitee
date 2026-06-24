@@ -1,37 +1,87 @@
-// lib/core/network/api_service.dart
-
 import 'package:dio/dio.dart';
-import 'api_constants.dart';
+import 'network_exceptions.dart';
 
-/// مسؤول عن HTTP calls فقط — zero business logic
 final class ApiService {
   final Dio _dio;
 
   const ApiService(this._dio);
 
-  Future<Response<Map<String, dynamic>>> post(
-      String path, {
-        Map<String, dynamic>? data,
+  Future<ApiResponse<T>> get<T>(
+      String endpoint, {
         Map<String, dynamic>? queryParameters,
-        Options? options,
       }) async {
-    return _dio.post<Map<String, dynamic>>(
-      path,
-      data: data,
-      queryParameters: queryParameters,
-      options: options,
-    );
+    try {
+      final response = await _dio.get(
+        endpoint,
+        queryParameters: queryParameters,
+      );
+      return ApiResponse.fromResponse(response);
+    } on DioException catch (e) {
+      throw NetworkException.fromError(e);
+    }
   }
 
-  Future<Response<Map<String, dynamic>>> get(
-      String path, {
+  Future<ApiResponse<T>> post<T>(
+      String endpoint, {
+        Map<String, dynamic>? data,
         Map<String, dynamic>? queryParameters,
-        Options? options,
       }) async {
-    return _dio.get<Map<String, dynamic>>(
-      path,
-      queryParameters: queryParameters,
-      options: options,
+    try {
+      final response = await _dio.post(
+        endpoint,
+        data: data,
+        queryParameters: queryParameters,
+      );
+
+      return ApiResponse.fromResponse(response);
+    } on DioException catch (e) {
+      throw NetworkException.fromError(e);
+    }
+  }
+
+  Future<ApiResponse<T>> put<T>(
+      String endpoint, {
+        Map<String, dynamic>? data,
+      }) async {
+    try {
+      final response = await _dio.put(endpoint, data: data);
+      return ApiResponse.fromResponse(response);
+    } on DioException catch (e) {
+      throw NetworkException.fromError(e);
+    }
+  }
+
+  Future<ApiResponse<T>> delete<T>(
+      String endpoint, {
+        Map<String, dynamic>? data,
+      }) async {
+    try {
+      final response = await _dio.delete(endpoint, data: data);
+      return ApiResponse.fromResponse(response);
+    } on DioException catch (e) {
+      throw NetworkException.fromError(e);
+    }
+  }
+}
+
+// ── Response Wrapper ──────────────────────────────────────────
+final class ApiResponse<T> {
+  final bool success;
+  final T? data;
+
+  const ApiResponse({
+    required this.success,
+    this.data,
+  });
+
+  // بيتعامل مع الـ structure بتاعك
+  // { "success": true, "data": { ... } }
+  factory ApiResponse.fromResponse(Response response) {
+    final body = response.data as Map<String, dynamic>?;
+
+    return ApiResponse(
+      success: body?['success'] as bool? ?? false,
+      data: body?['data'] as T?,
     );
   }
 }
